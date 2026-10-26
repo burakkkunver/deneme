@@ -182,7 +182,7 @@ private fun MapLegend(modifier: Modifier = Modifier) {
             LegendRow(Palette.Active, "Rotada")
             LegendRow(Palette.Delivered, "Teslim")
             LegendRow(Palette.Postponed, "Ertelendi")
-            LegendRow(Palette.Failed, "Teslim edilemedi")
+            LegendRow(Palette.Failed, "İade")
         }
     }
 }
