@@ -26,8 +26,7 @@ class OsrmClient(
     fun distanceMatrix(points: List<LatLng>): Array<DoubleArray>? {
         if (points.size < 2 || points.size > MAX_TABLE_POINTS) return null
         return try {
-            val json = JSONObject(get("$baseUrl/table/v1/driving/${coordinates(points)}?annotations=distance"))
-            if (json.optString("code") != "Ok") return null
+            val json = query("$baseUrl/table/v1/driving/${coordinates(points)}?annotations=distance") ?: return null
             val rows = json.getJSONArray("distances")
             Array(points.size) { i ->
                 val row = rows.getJSONArray(i)
@@ -63,10 +62,8 @@ class OsrmClient(
     }
 
     private fun routeChunk(points: List<LatLng>): Route? = try {
-        val json = JSONObject(
-            get("$baseUrl/route/v1/driving/${coordinates(points)}?overview=full&geometries=geojson&steps=false"),
-        )
-        if (json.optString("code") != "Ok") {
+        val json = query("$baseUrl/route/v1/driving/${coordinates(points)}?overview=full&geometries=geojson&steps=false")
+        if (json == null) {
             null
         } else {
             val route = json.getJSONArray("routes").getJSONObject(0)
@@ -79,6 +76,23 @@ class OsrmClient(
         }
     } catch (e: Exception) {
         null
+    }
+
+    /**
+     * Önce otoyolları dışlayarak sorar: kurye mahalle içinde dolaşır, otoyola
+     * "yapışan" bir nokta kilometrelerce sapma üretir. Sunucu desteklemezse
+     * düz sorguya geçer.
+     */
+    private fun query(url: String): JSONObject? {
+        for (candidate in listOf("$url&exclude=motorway", url)) {
+            try {
+                val json = JSONObject(get(candidate))
+                if (json.optString("code") == "Ok") return json
+            } catch (e: Exception) {
+                // Sıradaki adayı dene.
+            }
+        }
+        return null
     }
 
     private fun coordinates(points: List<LatLng>) =

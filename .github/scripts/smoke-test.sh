@@ -57,6 +57,10 @@ dump 01-acilis
 expect 01-acilis "SIRADAKİ DURAK · kalan 65"
 expect 01-acilis "Plan "
 
+echo "--- rota teşhisi"
+adb shell run-as $PKG cat shared_prefs/rota_asistani_state.xml > "$OUT/state.xml"
+python3 .github/scripts/route-diagnostics.py "$OUT/state.xml" || echo "teşhis betiği çalışmadı"
+
 tap 01-acilis text "Teslim edildi" && sleep 4
 dump 02-teslim
 expect 02-teslim "kalan 64"

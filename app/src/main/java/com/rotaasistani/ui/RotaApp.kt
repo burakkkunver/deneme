@@ -160,7 +160,6 @@ fun RotaApp(viewModel: RouteViewModel, hasLocationPermission: Boolean) {
                 },
             )
         },
-        snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             StatsBar(state)
@@ -189,6 +188,8 @@ fun RotaApp(viewModel: RouteViewModel, hasLocationPermission: Boolean) {
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
+                // Bildirimler haritanın üstünde çıkar, alttaki işlem butonlarını kapatmaz.
+                SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(end = 56.dp))
             }
             BottomPanel(
                 state = state,
