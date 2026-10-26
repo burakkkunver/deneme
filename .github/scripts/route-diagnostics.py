@@ -44,9 +44,12 @@ def main(path):
     points = [(depot["lat"], depot["lon"])] + [(s["lat"], s["lon"]) for s in order]
     straight = [haversine(points[i], points[i + 1]) for i in range(len(points) - 1)]
     print("kuş uçuşu rota: {:.0f} m (x1.3 = {:.0f} m)".format(sum(straight), sum(straight) * 1.3))
+    ratio = (state.get("optimizedMeters") or 0) / max(sum(straight), 1)
+    print("plan / kuş uçuşu oranı: {:.2f} (şehir içinde 1.3-1.6 beklenir)".format(ratio))
 
     coords = ";".join("{:.6f},{:.6f}".format(lon, lat) for lat, lon in points)
-    for label, extra in (("varsayılan", ""), ("otoyolsuz", "&exclude=motorway")):
+    # Not: OSRM demo sunucusu exclude=motorway desteklemiyor (HTTP 400).
+    for label, extra in (("varsayılan", ""),):
         try:
             data = get(f"{BASE}/route/v1/driving/{coords}?overview=false{extra}")
             if data.get("code") != "Ok":
@@ -75,7 +78,13 @@ def main(path):
             print(f"   {stop['id']} hata: {error}")
         time.sleep(0.3)
     print("   yol adlarına göre durak sayısı:", sorted(names.items(), key=lambda kv: -kv[1])[:15])
+    return ratio
+
+
+MAX_RATIO = 2.2
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    if main(sys.argv[1]) > MAX_RATIO:
+        print(f"HATA plan, kuş uçuşu rotanın {MAX_RATIO} katından uzun: duraklar ana yollara yapışıyor olabilir")
+        sys.exit(2)

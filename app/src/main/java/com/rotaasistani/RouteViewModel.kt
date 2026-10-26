@@ -91,6 +91,7 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
 
     private var optimizeJob: Job? = null
     private var geometryJob: Job? = null
+    private var demoJob: Job? = null
 
     init {
         val saved = store.load()
@@ -126,21 +127,59 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun loadDemo(center: LatLng, depot: LatLng, label: String, seed: Long) {
+        demoJob?.cancel()
         optimizeJob?.cancel()
         geometryJob?.cancel()
-        val stops = DemoData.generate(center, seed = seed)
-        _state.update {
-            UiState(
-                stops = stops,
-                depot = depot,
-                courierLocation = it.courierLocation,
-                fitRequest = it.fitRequest + 1,
-                focusRequest = it.focusRequest,
-                message = UiMessage("$label çevresinde ${stops.size} demo paket yüklendi"),
-            )
+        _state.update { it.copy(isOptimizing = true) }
+        demoJob = viewModelScope.launch {
+            val (stops, snappedDepot) = prepareDemo(center, depot, seed)
+            _state.update {
+                UiState(
+                    stops = stops,
+                    depot = snappedDepot,
+                    courierLocation = it.courierLocation,
+                    fitRequest = it.fitRequest + 1,
+                    focusRequest = it.focusRequest,
+                    message = UiMessage("$label çevresinde ${stops.size} demo paket yüklendi"),
+                )
+            }
+            persist()
+            optimizeRoute()
         }
-        persist()
-        optimizeRoute()
+    }
+
+    /**
+     * Rastgele noktaları en yakın sokağa bağlar; otoyol/kavşak/isimsiz yola düşenleri
+     * eler. Gerçek adresler zaten bir sokaktadır, ama rastgele bir nokta otoyol
+     * kavşağına "yapışırsa" rota kilometrelerce uzar. Yol servisine ulaşılamazsa
+     * noktalar olduğu gibi kullanılır.
+     */
+    private suspend fun prepareDemo(center: LatLng, depot: LatLng, seed: Long): Pair<List<Stop>, LatLng> {
+        val count = DemoData.DEFAULT_COUNT
+        val candidates = DemoData.generate(center, count = DemoData.CANDIDATE_COUNT, seed = seed)
+        val fallback = candidates.take(count) to depot
+        val snaps = withContext(Dispatchers.IO) { osrm.snap(listOf(depot) + candidates.map { it.position }) }
+        if (snaps == null || snaps.size != candidates.size + 1) return fallback
+        val chosen = candidates.indices.mapNotNull { i ->
+            val snap = snaps[i + 1]
+            if (DemoData.isDeliverableStreet(snap.name, snap.distanceMeters)) {
+                candidates[i].copy(
+                    lat = snap.location.lat,
+                    lon = snap.location.lon,
+                    address = DemoData.withStreet(candidates[i].address, snap.name),
+                )
+            } else {
+                null
+            }
+        }.take(count)
+        if (chosen.size < count) return fallback
+        val depotSnap = snaps[0]
+        val snappedDepot = if (DemoData.isDeliverableStreet(depotSnap.name, depotSnap.distanceMeters)) {
+            depotSnap.location
+        } else {
+            chosen.minBy { Geo.haversineMeters(it.position, depot) }.position
+        }
+        return chosen to snappedDepot
     }
 
     /** Sunumda 60 paketi tek tek işaretlemeden 2. turu göstermek için. */

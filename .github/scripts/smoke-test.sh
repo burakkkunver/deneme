@@ -59,7 +59,10 @@ expect 01-acilis "Plan "
 
 echo "--- rota teşhisi"
 adb shell run-as $PKG cat shared_prefs/rota_asistani_state.xml > "$OUT/state.xml"
-python3 .github/scripts/route-diagnostics.py "$OUT/state.xml" || echo "teşhis betiği çalışmadı"
+if ! python3 .github/scripts/route-diagnostics.py "$OUT/state.xml"; then
+  echo "HATA rota teşhisi başarısız"
+  FAILED=1
+fi
 
 tap 01-acilis text "Teslim edildi" && sleep 4
 dump 02-teslim

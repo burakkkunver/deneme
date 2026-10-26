@@ -331,6 +331,8 @@ private fun BottomPanel(
         Column(Modifier.fillMaxWidth().padding(12.dp)) {
             val route = state.activeRoute
             when {
+                state.stops.isEmpty() -> Text("Demo paketler hazırlanıyor…")
+
                 state.phase == Phase.DONE -> {
                     Text("Tüm paketler işlendi", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(

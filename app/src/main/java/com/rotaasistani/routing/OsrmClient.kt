@@ -22,6 +22,29 @@ class OsrmClient(
 ) {
     data class Route(val points: List<LatLng>, val distanceMeters: Double, val durationSeconds: Double)
 
+    /** Noktanın bağlandığı (yapıştığı) yol: adı, yol üzerindeki konum ve uzaklık. */
+    data class Snap(val name: String, val location: LatLng, val distanceMeters: Double)
+
+    /** Tüm noktaları tek istekte en yakın yola bağlar. */
+    fun snap(points: List<LatLng>): List<Snap>? {
+        if (points.isEmpty() || points.size > MAX_TABLE_POINTS) return null
+        return try {
+            val json = query("$baseUrl/table/v1/driving/${coordinates(points)}?destinations=0") ?: return null
+            val sources = json.getJSONArray("sources")
+            List(sources.length()) { i ->
+                val waypoint = sources.getJSONObject(i)
+                val location = waypoint.getJSONArray("location")
+                Snap(
+                    name = waypoint.optString("name"),
+                    location = LatLng(lat = location.getDouble(1), lon = location.getDouble(0)),
+                    distanceMeters = waypoint.optDouble("distance", 0.0),
+                )
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     /** Yol ağı üzerinden metre cinsinden mesafe matrisi. */
     fun distanceMatrix(points: List<LatLng>): Array<DoubleArray>? {
         if (points.size < 2 || points.size > MAX_TABLE_POINTS) return null
@@ -78,21 +101,9 @@ class OsrmClient(
         null
     }
 
-    /**
-     * Önce otoyolları dışlayarak sorar: kurye mahalle içinde dolaşır, otoyola
-     * "yapışan" bir nokta kilometrelerce sapma üretir. Sunucu desteklemezse
-     * düz sorguya geçer.
-     */
     private fun query(url: String): JSONObject? {
-        for (candidate in listOf("$url&exclude=motorway", url)) {
-            try {
-                val json = JSONObject(get(candidate))
-                if (json.optString("code") == "Ok") return json
-            } catch (e: Exception) {
-                // Sıradaki adayı dene.
-            }
-        }
-        return null
+        val json = JSONObject(get(url))
+        return if (json.optString("code") == "Ok") json else null
     }
 
     private fun coordinates(points: List<LatLng>) =

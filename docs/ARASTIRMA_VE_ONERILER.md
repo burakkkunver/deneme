@@ -62,6 +62,7 @@ Etki ve zorluk kabaca tahmin edildi. Öncelik pilot verisiyle netleşir.
 | 1 | **Rota sırasına göre araç yükleme** | Şubede barkod okutunca "37. durak, arka sol" etiketi basılır. Her durakta paket arama süresi biter. | Yüksek | Düşük |
 | 2 | **Teslimattan önce müşteri bildirimi + "evde değilim" seçenekleri** | Bildirimde ETA yer alır. Müşteri komşuya, kapıcıya veya lockera yönlendirebilir ya da başka saat seçebilir. Başarısız teslimat ve tekrar dağıtım azalır. | Çok yüksek | Orta |
 | 3 | **Teslim noktası hafızası** | Bina giriş fotoğrafı, kapı kodu, "zil bozuk, arayın" gibi notlar kuryeler arasında paylaşılır. Pin, geçmiş başarılı teslim GPS'leriyle düzeltilir. | Yüksek | Orta |
+| 3b | **Teslim noktasını doğru sokağa bağlama** | Prototip testinde otoyol kavşağına "yapışan" 6 nokta 18 km'lik turu 46 km'ye çıkardı. Her adres binanın giriş verdiği sokağa bağlanmalı. Geçmiş teslim GPS'leri en iyi kaynak. | Yüksek | Orta |
 | 4 | **Yapay zeka ile adres düzeltme** | Serbest metin adres (ör. "market yanı, 3. kat") LLM ile ayrıştırılıp normalize edilir. Belirsiz adresler dağıtımdan **önce** işaretlenir ve müşteriye "konumunu paylaş" linki gider. | Yüksek | Orta |
 | 5 | **Zaman pencereli rota** | "İş yerleri 09–18, evler akşam" ve müşteri saat tercihi rota hesabına girer (VRP-TW). | Yüksek | Orta |
 | 6 | **Aynı binayı gruplama** | "Bu binada 3 paket var" uyarısıyla tek park, tek giriş. | Orta | Düşük |

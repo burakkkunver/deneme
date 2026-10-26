@@ -17,7 +17,25 @@ object DemoData {
     val DEFAULT_CENTER = LatLng(40.9923, 29.1244) // Ataşehir
     val DEFAULT_DEPOT = LatLng(40.9862, 29.1180)
     const val DEFAULT_COUNT = 65
+
+    /** Yola bağlanamayanlar elendikten sonra 65 paket kalsın diye fazladan aday. */
+    const val CANDIDATE_COUNT = 95
     const val DEFAULT_SEED = 2026L
+    private const val MAX_SNAP_METERS = 80.0
+
+    // Otoyol, kavşak, bağlantı yolu vb. Kurye bu yollardan kapıya teslim yapmaz;
+    // noktayı buraya bağlamak rotada kilometrelerce sapma üretir.
+    private val MAJOR_ROAD = Regex(
+        "otoyol|kavşa|bağlantı|evre yolu|köprü|viyadük|tünel|\\bTEM\\b|\\bE-?5\\b|\\bD-?100\\b|\\bO-?[1-7]\\b",
+        RegexOption.IGNORE_CASE,
+    )
+    private val GENERIC_STREET = Regex("^\\d+\\. Sokak")
+
+    fun isDeliverableStreet(name: String, snapMeters: Double): Boolean =
+        name.isNotBlank() && snapMeters <= MAX_SNAP_METERS && !MAJOR_ROAD.containsMatchIn(name)
+
+    /** "12. Sokak No:5 D:3" → "Gülnihal Sokağı No:5 D:3" */
+    fun withStreet(address: String, street: String): String = address.replaceFirst(GENERIC_STREET, street)
 
     private const val METERS_PER_DEGREE = 111_320.0
 
@@ -34,7 +52,7 @@ object DemoData {
         center: LatLng,
         count: Int = DEFAULT_COUNT,
         seed: Long = DEFAULT_SEED,
-        radiusMeters: Double = 1_100.0,
+        radiusMeters: Double = 850.0,
     ): List<Stop> {
         val random = Random(seed)
         val buildings = ArrayList<Building>()

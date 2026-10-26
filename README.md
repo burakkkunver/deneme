@@ -81,8 +81,11 @@ app/
 
 ## Prototipin sınırları (sunumda açıkça söylenmeli)
 
-- **Demo veri:** Koordinatlar rastgele. Gerçekte en zor kısım adresi doğru koordinata
-  çevirmek (geocoding).
+- **Demo veri:** İsimler rastgele. Noktalar mahallede rastgele seçilip OSRM ile en yakın
+  sokağa bağlanıyor. Otoyola, kavşağa veya isimsiz yola düşenler eleniyor, sokak adı
+  gerçek. Gerçekte en zor kısım adresi doğru koordinata ve **doğru sokağa** bağlamak
+  (geocoding). Test sırasında bunu yaşadık: kavşağa yapışan 6 nokta 18 km'lik bir
+  turu 46 km'ye çıkarıyordu.
 - **"Liste sırasına göre %X" rakamı abartılıdır**, çünkü demo listesi coğrafi olarak
   karışık. Deneyimli bir kuryeyle karşılaştırmaya daha yakın olan rakam
   *"hep en yakına git"e göre* olanıdır. Gerçek tasarruf ancak pilotta ölçülebilir.
