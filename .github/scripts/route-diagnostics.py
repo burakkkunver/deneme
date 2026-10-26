@@ -51,7 +51,7 @@ def main(path):
     # Not: OSRM demo sunucusu exclude=motorway desteklemiyor (HTTP 400).
     for label, extra in (("varsayılan", ""),):
         try:
-            data = get(f"{BASE}/route/v1/driving/{coords}?overview=false{extra}")
+            data = get(f"{BASE}/route/v1/driving/{coords}?overview=false&continue_straight=false{extra}")
             if data.get("code") != "Ok":
                 print(f"OSRM rota ({label}): code={data.get('code')} {data.get('message')}")
                 continue

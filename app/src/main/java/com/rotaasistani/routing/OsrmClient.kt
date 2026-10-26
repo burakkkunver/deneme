@@ -66,7 +66,11 @@ class OsrmClient(
         }
     }
 
-    /** Verilen sırayla durakları bağlayan, sokakları takip eden çizgi. */
+    /**
+     * Verilen sırayla durakları bağlayan, sokakları takip eden çizgi.
+     * continue_straight=false: kurye durakta geri dönebilir; OSRM'in varsayılanı
+     * her durakta düz devam etmeye zorlayıp blok etrafında gereksiz tur attırır.
+     */
     fun route(points: List<LatLng>): Route? {
         if (points.size < 2) return null
         val line = ArrayList<LatLng>()
@@ -85,7 +89,7 @@ class OsrmClient(
     }
 
     private fun routeChunk(points: List<LatLng>): Route? = try {
-        val json = query("$baseUrl/route/v1/driving/${coordinates(points)}?overview=full&geometries=geojson&steps=false")
+        val json = query("$baseUrl/route/v1/driving/${coordinates(points)}?overview=full&geometries=geojson&steps=false&continue_straight=false")
         if (json == null) {
             null
         } else {
