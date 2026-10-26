@@ -14,8 +14,10 @@ import kotlin.random.Random
  * isimler ve adresler rastgeledir.
  */
 object DemoData {
-    val DEFAULT_CENTER = LatLng(40.9923, 29.1244) // Ataşehir
-    val DEFAULT_DEPOT = LatLng(40.9862, 29.1180)
+    // Kadıköy Göztepe: CI ölçümünde rastgele noktaların 94/95'i isimli yerel sokağa
+    // bağlandı (Ataşehir merkezde 49/95: site içi isimsiz yollar, otoyol kavşağı).
+    val DEFAULT_CENTER = LatLng(40.9775, 29.0640)
+    val DEFAULT_DEPOT = LatLng(40.9745, 29.0580)
     const val DEFAULT_COUNT = 65
 
     /** Yola bağlanamayanlar elendikten sonra 65 paket kalsın diye fazladan aday. */
@@ -52,11 +54,13 @@ object DemoData {
         center: LatLng,
         count: Int = DEFAULT_COUNT,
         seed: Long = DEFAULT_SEED,
-        radiusMeters: Double = 850.0,
+        radiusMeters: Double = 750.0,
+        firstIndex: Int = 0,
     ): List<Stop> {
         val random = Random(seed)
         val buildings = ArrayList<Building>()
-        return List(count) { index ->
+        return List(count) { i ->
+            val index = firstIndex + i
             // Gerçek hayattaki gibi bazı paketler aynı binaya gider.
             val building = if (buildings.isNotEmpty() && random.nextDouble() < 0.2) {
                 buildings[random.nextInt(buildings.size)]

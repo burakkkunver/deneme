@@ -140,7 +140,7 @@ fun RotaApp(viewModel: RouteViewModel, hasLocationPermission: Boolean) {
                         }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             DropdownMenuItem(
-                                text = { Text("Yeni demo: Ataşehir (65 paket)") },
+                                text = { Text("Yeni demo: Kadıköy Göztepe (65 paket)") },
                                 onClick = { menuOpen = false; viewModel.loadDefaultDemo() },
                             )
                             DropdownMenuItem(

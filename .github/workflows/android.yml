@@ -5,14 +5,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  demo-area:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - name: Demo mahallesi adaylarını karşılaştır
-        run: python3 .github/scripts/explore-demo-areas.py
-
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30

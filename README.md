@@ -30,7 +30,7 @@ Bu repoya her push'ta GitHub Actions testleri çalıştırır ve bir **debug APK
 2. Sayfanın altındaki **Artifacts** bölümünden `rota-asistani-debug-apk` dosyasını indir (zip).
 3. Zip'i aç, içindeki `app-debug.apk` dosyasını telefona at (USB, Drive, WhatsApp vb.).
 4. Telefonda dosyaya dokun. "Bilinmeyen kaynaklardan yükleme" izni istenirse ver.
-5. Uygulama açılınca konum iznini ver (Ataşehir demosu için zorunlu değil).
+5. Uygulama açılınca konum iznini ver (Göztepe demosu için zorunlu değil).
 
 Android 8.0 (API 26) ve üzeri desteklenir.
 
@@ -47,7 +47,7 @@ kullanılabilir.
 
 ## 5 dakikalık sunum senaryosu
 
-1. **Açılış:** Ataşehir'de 65 paket yüklü gelir ve rota otomatik hesaplanır. Üst bantta
+1. **Açılış:** Kadıköy Göztepe'de 65 paket yüklü gelir ve rota otomatik hesaplanır. Üst bantta
    kalan km ve süre ile "liste sırasına göre %X, *hep en yakına git*e göre %Y daha
    kısa" bilgisi görünür.
 2. **Sıradaki durak:** Alttaki kartta alıcı, adres ve "Ardından" bilgisi var.

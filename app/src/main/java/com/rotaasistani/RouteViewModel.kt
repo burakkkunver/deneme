@@ -115,7 +115,7 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
 
     // region Demo verisi
 
-    fun loadDefaultDemo() = loadDemo(DemoData.DEFAULT_CENTER, DemoData.DEFAULT_DEPOT, "Ataşehir", DemoData.DEFAULT_SEED)
+    fun loadDefaultDemo() = loadDemo(DemoData.DEFAULT_CENTER, DemoData.DEFAULT_DEPOT, "Göztepe", DemoData.DEFAULT_SEED)
 
     fun loadDemoAroundMe() {
         val me = _state.value.courierLocation
@@ -156,30 +156,42 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
      */
     private suspend fun prepareDemo(center: LatLng, depot: LatLng, seed: Long): Pair<List<Stop>, LatLng> {
         val count = DemoData.DEFAULT_COUNT
-        val candidates = DemoData.generate(center, count = DemoData.CANDIDATE_COUNT, seed = seed)
-        val fallback = candidates.take(count) to depot
-        val snaps = withContext(Dispatchers.IO) { osrm.snap(listOf(depot) + candidates.map { it.position }) }
-        if (snaps == null || snaps.size != candidates.size + 1) return fallback
-        val chosen = candidates.indices.mapNotNull { i ->
-            val snap = snaps[i + 1]
-            if (DemoData.isDeliverableStreet(snap.name, snap.distanceMeters)) {
-                candidates[i].copy(
-                    lat = snap.location.lat,
-                    lon = snap.location.lon,
-                    address = DemoData.withStreet(candidates[i].address, snap.name),
-                )
-            } else {
-                null
+        val chosen = ArrayList<Stop>()
+        var depotSnap: OsrmClient.Snap? = null
+        var fallback: List<Stop>? = null
+        // Site içi isimsiz yollar, kavşaklar vb. elenince 65 kalmazsa yeni aday grubu dene.
+        for (batch in 0 until DEMO_BATCHES) {
+            val candidates = DemoData.generate(
+                center,
+                count = DemoData.CANDIDATE_COUNT,
+                seed = seed + batch,
+                firstIndex = batch * DemoData.CANDIDATE_COUNT,
+            )
+            if (fallback == null) fallback = candidates.take(count)
+            val snaps = withContext(Dispatchers.IO) { osrm.snap(listOf(depot) + candidates.map { it.position }) }
+            if (snaps == null || snaps.size != candidates.size + 1) break
+            if (depotSnap == null) depotSnap = snaps[0]
+            candidates.forEachIndexed { i, candidate ->
+                val snap = snaps[i + 1]
+                if (DemoData.isDeliverableStreet(snap.name, snap.distanceMeters)) {
+                    chosen += candidate.copy(
+                        lat = snap.location.lat,
+                        lon = snap.location.lon,
+                        address = DemoData.withStreet(candidate.address, snap.name),
+                    )
+                }
             }
-        }.take(count)
-        if (chosen.size < count) return fallback
-        val depotSnap = snaps[0]
-        val snappedDepot = if (DemoData.isDeliverableStreet(depotSnap.name, depotSnap.distanceMeters)) {
-            depotSnap.location
-        } else {
-            chosen.minBy { Geo.haversineMeters(it.position, depot) }.position
+            if (chosen.size >= count) break
         }
-        return chosen to snappedDepot
+        if (chosen.size < count) return (fallback ?: emptyList()) to depot
+        val stops = chosen.take(count)
+        val snap = depotSnap
+        val snappedDepot = if (snap != null && DemoData.isDeliverableStreet(snap.name, snap.distanceMeters)) {
+            snap.location
+        } else {
+            stops.minBy { Geo.haversineMeters(it.position, depot) }.position
+        }
+        return stops to snappedDepot
     }
 
     /** Sunumda 60 paketi tek tek işaretlemeden 2. turu göstermek için. */
@@ -461,5 +473,6 @@ class RouteViewModel(application: Application) : AndroidViewModel(application) {
         const val SERVICE_SECONDS = 150.0
         const val GPS_MAX_DISTANCE_M = 5_000.0
         const val LOCATION_MIN_MOVE_M = 15.0
+        const val DEMO_BATCHES = 3
     }
 }
